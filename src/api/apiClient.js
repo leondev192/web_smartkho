@@ -1,6 +1,6 @@
 // src/api/apiClient.js
 
-const BASE_URL = "http://localhost:3000/api/v1";
+const BASE_URL = "https://be-smartkho.onrender.com/api/v1";
 
 const apiClient = async (
   endpoint,
