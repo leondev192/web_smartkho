@@ -216,14 +216,6 @@ const TransactionManagement = () => {
           Tổng Số Giao Dịch Xuất: <b>{statistics.totalOutTransactions}</b>
         </p>
         <Divider />
-        <Title level={5}>Top Sản Phẩm Giao Dịch Nhiều Nhất</Title>
-        <ul>
-          {statistics.topProducts.map((product) => (
-            <li key={product.productId}>
-              {product.productName}: {product.transactionCount} giao dịch
-            </li>
-          ))}
-        </ul>
       </Card>
     </div>
   );
