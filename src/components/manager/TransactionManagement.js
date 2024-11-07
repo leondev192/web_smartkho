@@ -16,7 +16,6 @@ import {
   approveTransaction,
   getTransactionStatistics,
 } from "../../api/services/transactionService.js";
-import { getAllProducts } from "../../api/services/productService";
 import TransactionForm from "../../components/form/TransactionForm";
 
 const { Title } = Typography;
@@ -28,55 +27,19 @@ const TransactionManagement = () => {
     totalOutTransactions: 0,
     topProducts: [],
   });
-  const [productMap, setProductMap] = useState({});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Fetch products and build productMap before other data
   useEffect(() => {
-    const initializeData = async () => {
-      await fetchProducts(); // First load products to build the map
-      await fetchTransactions(); // Then fetch transactions using productMap
-      await fetchStatistics(); // Fetch statistics using productMap
-    };
-    initializeData();
+    fetchTransactions();
+    fetchStatistics();
   }, []);
-
-  // Re-run when productMap changes to ensure names are available
-  useEffect(() => {
-    if (Object.keys(productMap).length > 0) {
-      fetchTransactions();
-      fetchStatistics();
-    }
-  }, [productMap]);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await getAllProducts();
-      if (response.status === "success") {
-        const map = {};
-        response.data.forEach((product) => {
-          map[product.id] = product.name;
-        });
-        setProductMap(map);
-      } else {
-        message.error(response.message || "Error loading products!");
-      }
-    } catch (error) {
-      message.error("Error fetching products!");
-      console.error(error);
-    }
-  };
 
   const fetchTransactions = async () => {
     setLoading(true);
     const response = await getAllTransactions();
     if (response.status === "success") {
-      const updatedTransactions = response.data.map((transaction) => ({
-        ...transaction,
-        productName: productMap[transaction.productId] || "Unknown Product",
-      }));
-      setTransactions(updatedTransactions);
+      setTransactions(response.data); // Directly use response data with product names
     } else {
       message.error(response.message || "Error loading transactions!");
     }
@@ -101,24 +64,27 @@ const TransactionManagement = () => {
 
         const productTransactionCounts = {};
 
+        // Aggregate counts for IN and OUT transactions
         Object.entries(inTransactions).forEach(([productId, count]) => {
           productTransactionCounts[productId] = count;
         });
-
         Object.entries(outTransactions).forEach(([productId, count]) => {
-          if (productTransactionCounts[productId]) {
-            productTransactionCounts[productId] += count;
-          } else {
-            productTransactionCounts[productId] = count;
-          }
+          productTransactionCounts[productId] =
+            (productTransactionCounts[productId] || 0) + count;
         });
 
         const topProducts = Object.entries(productTransactionCounts)
-          .map(([productId, count]) => ({
-            productId,
-            productName: productMap[productId] || "Unknown Product",
-            transactionCount: count,
-          }))
+          .map(([productId, count]) => {
+            const transactionWithProduct = transactions.find(
+              (transaction) => transaction.productId === productId
+            );
+            return {
+              productId,
+              productName:
+                transactionWithProduct?.product?.name || "Unknown Product",
+              transactionCount: count,
+            };
+          })
           .sort((a, b) => b.transactionCount - a.transactionCount)
           .slice(0, 3);
 
@@ -169,7 +135,12 @@ const TransactionManagement = () => {
   };
 
   const columns = [
-    { title: "Sản Phẩm", dataIndex: "productName", key: "productName" },
+    {
+      title: "Sản Phẩm",
+      dataIndex: ["product", "name"], // Access the nested product name
+      key: "productName",
+      render: (text) => text || "Unknown Product",
+    },
     { title: "Loại", dataIndex: "transactionType", key: "transactionType" },
     { title: "Số Lượng", dataIndex: "quantity", key: "quantity" },
     { title: "Ghi Chú", dataIndex: "remarks", key: "remarks" },
@@ -245,6 +216,14 @@ const TransactionManagement = () => {
           Tổng Số Giao Dịch Xuất: <b>{statistics.totalOutTransactions}</b>
         </p>
         <Divider />
+        <Title level={5}>Top Sản Phẩm Giao Dịch Nhiều Nhất</Title>
+        <ul>
+          {statistics.topProducts.map((product) => (
+            <li key={product.productId}>
+              {product.productName}: {product.transactionCount} giao dịch
+            </li>
+          ))}
+        </ul>
       </Card>
     </div>
   );
