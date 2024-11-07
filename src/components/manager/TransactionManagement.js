@@ -32,12 +32,23 @@ const TransactionManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Fetch products and build productMap before other data
   useEffect(() => {
-    fetchProducts().then(() => {
-      fetchStatistics();
-      fetchTransactions();
-    });
+    const initializeData = async () => {
+      await fetchProducts(); // First load products to build the map
+      await fetchTransactions(); // Then fetch transactions using productMap
+      await fetchStatistics(); // Fetch statistics using productMap
+    };
+    initializeData();
   }, []);
+
+  // Re-run when productMap changes to ensure names are available
+  useEffect(() => {
+    if (Object.keys(productMap).length > 0) {
+      fetchTransactions();
+      fetchStatistics();
+    }
+  }, [productMap]);
 
   const fetchProducts = async () => {
     try {
@@ -63,7 +74,7 @@ const TransactionManagement = () => {
     if (response.status === "success") {
       const updatedTransactions = response.data.map((transaction) => ({
         ...transaction,
-        productName: productMap[transaction.productId] || "Unknown Product", // Always use the product name
+        productName: productMap[transaction.productId] || "Unknown Product",
       }));
       setTransactions(updatedTransactions);
     } else {
@@ -234,14 +245,6 @@ const TransactionManagement = () => {
           Tổng Số Giao Dịch Xuất: <b>{statistics.totalOutTransactions}</b>
         </p>
         <Divider />
-        <Title level={5}>Top Sản Phẩm Giao Dịch Nhiều Nhất</Title>
-        <ul>
-          {statistics.topProducts.map((product) => (
-            <li key={product.productId}>
-              {product.productName}: {product.transactionCount} giao dịch
-            </li>
-          ))}
-        </ul>
       </Card>
     </div>
   );
