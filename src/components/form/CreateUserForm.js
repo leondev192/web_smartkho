@@ -47,13 +47,7 @@ const CreateUserForm = ({ onSuccess }) => {
         >
           <Input placeholder="Nhập email" />
         </Form.Item>
-        <Form.Item
-          label="Mật khẩu"
-          name="password"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
-        >
-          <Input.Password placeholder="Nhập mật khẩu" />
-        </Form.Item>
+
         <Form.Item
           label="Họ và Tên"
           name="fullName"
