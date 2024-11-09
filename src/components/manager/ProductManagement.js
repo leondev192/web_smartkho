@@ -8,6 +8,7 @@ import {
   getProductById,
 } from "../../api/services/productService";
 import ProductForm from "../../components/form/ProductForm";
+import Barcode from "react-barcode"; // Import Barcode component
 
 const { Title } = Typography;
 
@@ -17,6 +18,8 @@ const ProductManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [barcodeModalVisible, setBarcodeModalVisible] = useState(false);
+  const [barcodeValue, setBarcodeValue] = useState("");
 
   useEffect(() => {
     fetchProducts();
@@ -90,6 +93,11 @@ const ProductManagement = () => {
     setLoading(false);
   };
 
+  const showBarcodeModal = (sku) => {
+    setBarcodeValue(sku);
+    setBarcodeModalVisible(true);
+  };
+
   const columns = [
     { title: "Mã SKU", dataIndex: "sku", key: "sku" },
     { title: "Tên", dataIndex: "name", key: "name" },
@@ -108,7 +116,7 @@ const ProductManagement = () => {
       title: "Hành Động",
       key: "actions",
       render: (text, record) => (
-        <Space>
+        <Space size="small">
           <Button
             type="link"
             onClick={() => showEditModal(record.id)}
@@ -122,6 +130,13 @@ const ProductManagement = () => {
             onClick={() => handleDeleteProduct(record.id)}
           >
             Xóa
+          </Button>
+          <Button
+            type="link"
+            onClick={() => showBarcodeModal(record.sku)}
+            style={{ color: "#0096ff" }}
+          >
+            Xem mã vạch
           </Button>
         </Space>
       ),
@@ -153,6 +168,7 @@ const ProductManagement = () => {
         />
       </Card>
 
+      {/* Product Form Modal */}
       <Modal
         title={isEditMode ? "Chỉnh sửa Sản Phẩm" : "Thêm Sản Phẩm"}
         visible={isModalVisible}
@@ -164,6 +180,26 @@ const ProductManagement = () => {
           onSubmit={isEditMode ? handleUpdateProduct : handleCreateProduct}
           isEditMode={isEditMode}
         />
+      </Modal>
+
+      {/* Barcode Modal */}
+      <Modal
+        title="Mã Vạch"
+        visible={barcodeModalVisible}
+        onCancel={() => setBarcodeModalVisible(false)}
+        footer={null}
+        style={{ textAlign: "center" }}
+      >
+        {barcodeValue ? (
+          <Barcode
+            value={barcodeValue}
+            format="CODE128"
+            width={2}
+            height={100}
+          />
+        ) : (
+          <p>Chưa có mã SKU để tạo mã vạch</p>
+        )}
       </Modal>
     </div>
   );

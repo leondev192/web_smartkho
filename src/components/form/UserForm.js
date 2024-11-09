@@ -8,7 +8,7 @@ const UserForm = ({ initialValues = {}, onSubmit, isEditMode }) => {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    form.setFieldsValue(initialValues); // Đặt giá trị mặc định cho form
+    form.setFieldsValue(initialValues);
   }, [initialValues, form]);
 
   const handleFinish = (values) => {
